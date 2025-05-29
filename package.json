@@ -1,0 +1,54 @@
+{
+  "name": "vietnam-finance-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "generate": "drizzle-kit generate:pg",
+    "migrate": "tsx src/db/migrate.ts"
+  },
+  "dependencies": {
+    "@auth/core": "^0.28.0",
+    "@auth/drizzle-adapter": "^0.8.0",
+    "axios": "^1.6.7",
+    "date-fns": "^3.3.1",
+    "drizzle-orm": "^0.29.3",
+    "express": "^4.18.2",
+    "firebase": "^10.8.0",
+    "multer": "^1.4.5-lts.1",
+    "next-auth": "^4.24.5",
+    "pg": "^8.11.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-dropzone": "^14.2.3",
+    "react-hook-form": "^7.50.1",
+    "react-router-dom": "^6.22.1",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/multer": "^1.4.11",
+    "@types/node": "^20.11.19",
+    "@types/pg": "^8.11.0",
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "daisyui": "^4.6.3",
+    "drizzle-kit": "^0.20.14",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.1.3"
+  }
+}
+

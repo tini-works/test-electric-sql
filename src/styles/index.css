@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom styles for the application */
+.sidebar-item {
+  @apply flex items-center justify-between p-3 hover:bg-gray-100 cursor-pointer;
+}
+
+.sidebar-item.active {
+  @apply bg-primary/10;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-4 py-2 rounded hover:bg-primary/90;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground px-4 py-2 rounded hover:bg-secondary/90;
+}
+
+.badge {
+  @apply px-2 py-1 text-xs rounded;
+}
+
+.badge-pending {
+  @apply bg-yellow-500 text-white;
+}
+
+.badge-approved {
+  @apply bg-green-600 text-white;
+}
+
+.badge-rejected {
+  @apply bg-red-600 text-white;
+}
+
+.badge-draft {
+  @apply bg-gray-400 text-white;
+}
+
+.data-table th,
+.data-table td {
+  @apply py-2 px-4 text-left;
+}
+
+.data-table th {
+  @apply bg-gray-100 font-medium;
+}
+
+.data-table tr {
+  @apply border-b border-gray-200;
+}
+
+.data-table tr:last-child {
+  @apply border-b-0;
+}
+
