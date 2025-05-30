@@ -1,9 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
-// Your Firebase configuration
-// Replace with your actual Firebase config
+// Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -16,11 +15,15 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Authentication and get a reference to the service
+// Initialize Firebase services
 export const auth = getAuth(app);
-
-// Initialize Firebase Storage and get a reference to the service
 export const storage = getStorage(app);
+export const googleProvider = new GoogleAuthProvider();
+
+// Configure Google provider
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+});
 
 export default app;
 

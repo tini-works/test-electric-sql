@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, boolean, integer, json, uuid, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, boolean, integer, json, uuid, pgEnum, jsonb, foreignKey, uniqueIndex, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Enums
@@ -39,6 +39,12 @@ export const notificationTypeEnum = pgEnum('notification_type', [
   'ZALO'
 ]);
 
+export const approvalTypeEnum = pgEnum('approval_type', [
+  'SEQUENTIAL',
+  'PARALLEL',
+  'ANY_ONE'
+]);
+
 // Users table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -48,6 +54,9 @@ export const users = pgTable('users', {
   departmentId: uuid('department_id').references(() => departments.id),
   managerId: uuid('manager_id').references(() => users.id),
   isActive: boolean('is_active').notNull().default(true),
+  avatarUrl: text('avatar_url'),
+  phoneNumber: text('phone_number'),
+  zaloId: text('zalo_id'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -88,9 +97,16 @@ export const expenseRequests = pgTable('expense_requests', {
   categoryId: uuid('category_id').notNull().references(() => expenseCategories.id),
   requesterId: uuid('requester_id').notNull().references(() => users.id),
   departmentId: uuid('department_id').references(() => departments.id),
-  customFields: json('custom_fields'),
+  customFields: jsonb('custom_fields'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    requesterIdx: index('expense_requester_idx').on(table.requesterId),
+    departmentIdx: index('expense_department_idx').on(table.departmentId),
+    categoryIdx: index('expense_category_idx').on(table.categoryId),
+    statusIdx: index('expense_status_idx').on(table.status),
+  }
 });
 
 // Expense Attachments table
@@ -100,6 +116,8 @@ export const expenseAttachments = pgTable('expense_attachments', {
   fileName: text('file_name').notNull(),
   fileType: text('file_type').notNull(),
   fileUrl: text('file_url').notNull(),
+  filePath: text('file_path'),
+  fileSize: integer('file_size'),
   uploadedById: uuid('uploaded_by_id').notNull().references(() => users.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
@@ -110,6 +128,11 @@ export const approvalWorkflows = pgTable('approval_workflows', {
   name: text('name').notNull(),
   description: text('description'),
   entityType: text('entity_type').notNull(), // 'EXPENSE', 'INVOICE', 'PAYMENT'
+  approvalType: approvalTypeEnum('approval_type').notNull().default('SEQUENTIAL'),
+  amountThreshold: integer('amount_threshold'), // Optional threshold for amount-based routing
+  departmentId: uuid('department_id').references(() => departments.id), // Optional department for department-based routing
+  categoryId: uuid('category_id').references(() => expenseCategories.id), // Optional category for category-based routing
+  isDefault: boolean('is_default').default(false),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -139,6 +162,11 @@ export const approvalInstances = pgTable('approval_instances', {
   currentStepNumber: integer('current_step_number').notNull().default(1),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    entityIdx: index('approval_entity_idx').on(table.entityId, table.entityType),
+    statusIdx: index('approval_status_idx').on(table.status),
+  }
 });
 
 // Approval Actions table
@@ -178,12 +206,21 @@ export const invoices = pgTable('invoices', {
   dueDate: timestamp('due_date'),
   supplierId: uuid('supplier_id').notNull().references(() => suppliers.id),
   amount: integer('amount').notNull(), // Stored in smallest currency unit (e.g., cents)
+  taxAmount: integer('tax_amount'), // VAT amount
   currency: text('currency').notNull().default('VND'),
   status: invoiceStatusEnum('status').notNull().default('IMPORTED'),
   paymentRequestId: uuid('payment_request_id').references(() => paymentRequests.id),
-  eInvoiceData: json('e_invoice_data'), // Raw data from e-invoice system
+  eInvoiceData: jsonb('e_invoice_data'), // Raw data from e-invoice system
+  eInvoiceProviderId: uuid('e_invoice_provider_id').references(() => eInvoiceProviders.id),
+  eInvoiceUrl: text('e_invoice_url'), // URL to view the original e-invoice
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    supplierIdx: index('invoice_supplier_idx').on(table.supplierId),
+    statusIdx: index('invoice_status_idx').on(table.status),
+    invoiceNumberIdx: index('invoice_number_idx').on(table.invoiceNumber),
+  }
 });
 
 // Invoice Line Items table
@@ -200,12 +237,29 @@ export const invoiceLineItems = pgTable('invoice_line_items', {
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 
+// E-Invoice Providers table
+export const eInvoiceProviders = pgTable('e_invoice_providers', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  code: text('code').notNull().unique(), // e.g., 'VNPT', 'VIETTEL', 'MISA'
+  apiEndpoint: text('api_endpoint'),
+  apiKey: text('api_key'),
+  username: text('username'),
+  password: text('password'),
+  isActive: boolean('is_active').notNull().default(true),
+  extractionRules: jsonb('extraction_rules'), // JSON configuration for data extraction
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // Banks table
 export const banks = pgTable('banks', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   code: text('code').notNull().unique(),
   swiftCode: text('swift_code'),
+  apiEndpoint: text('api_endpoint'),
+  apiCredentials: jsonb('api_credentials'),
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
@@ -240,6 +294,37 @@ export const paymentRequests = pgTable('payment_requests', {
   recipientAccountNumber: text('recipient_account_number'),
   recipientAccountName: text('recipient_account_name'),
   paymentReference: text('payment_reference'),
+  bankSubmissionId: text('bank_submission_id'), // Reference ID from bank after submission
+  bankSubmissionDate: timestamp('bank_submission_date'),
+  bankSubmissionStatus: text('bank_submission_status'),
+  bankSubmissionResponse: jsonb('bank_submission_response'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    requesterIdx: index('payment_requester_idx').on(table.requesterId),
+    supplierIdx: index('payment_supplier_idx').on(table.supplierId),
+    statusIdx: index('payment_status_idx').on(table.status),
+  }
+});
+
+// Bank Transactions table
+export const bankTransactions = pgTable('bank_transactions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  bankAccountId: uuid('bank_account_id').notNull().references(() => companyBankAccounts.id),
+  transactionDate: timestamp('transaction_date').notNull(),
+  amount: integer('amount').notNull(),
+  currency: text('currency').notNull().default('VND'),
+  description: text('description'),
+  reference: text('reference'),
+  counterpartyName: text('counterparty_name'),
+  counterpartyAccount: text('counterparty_account'),
+  counterpartyBank: text('counterparty_bank'),
+  transactionType: text('transaction_type'), // 'DEBIT', 'CREDIT'
+  paymentRequestId: uuid('payment_request_id').references(() => paymentRequests.id),
+  isReconciled: boolean('is_reconciled').notNull().default(false),
+  importBatchId: text('import_batch_id'), // For grouping transactions imported together
+  rawData: jsonb('raw_data'), // Original data from bank statement
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
@@ -255,6 +340,58 @@ export const notifications = pgTable('notifications', {
   entityType: text('entity_type'), // 'EXPENSE', 'INVOICE', 'PAYMENT', 'APPROVAL'
   entityId: uuid('entity_id'), // ID of the related entity
   createdAt: timestamp('created_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    userIdx: index('notification_user_idx').on(table.userId),
+    readIdx: index('notification_read_idx').on(table.isRead),
+  }
+});
+
+// Notification Settings table
+export const notificationSettings = pgTable('notification_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  eventType: text('event_type').notNull(), // 'EXPENSE_CREATED', 'APPROVAL_REQUIRED', etc.
+  inApp: boolean('in_app').notNull().default(true),
+  email: boolean('email').notNull().default(true),
+  zalo: boolean('zalo').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    userEventIdx: uniqueIndex('user_event_idx').on(table.userId, table.eventType),
+  }
+});
+
+// System Settings table
+export const systemSettings = pgTable('system_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  category: text('category').notNull(), // 'GENERAL', 'APPROVAL', 'NOTIFICATION', 'EINVOICE'
+  key: text('key').notNull(),
+  value: text('value'),
+  valueJson: jsonb('value_json'),
+  description: text('description'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+}, (table) => {
+  return {
+    categoryKeyIdx: uniqueIndex('category_key_idx').on(table.category, table.key),
+  }
+});
+
+// Export Data Logs table
+export const exportLogs = pgTable('export_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id),
+  exportType: text('export_type').notNull(), // 'ACCOUNTING', 'BANK_TRANSFER'
+  fileFormat: text('file_format').notNull(), // 'CSV', 'EXCEL', 'XML'
+  fileUrl: text('file_url'),
+  filePath: text('file_path'),
+  status: text('status').notNull(), // 'SUCCESS', 'FAILED'
+  errorMessage: text('error_message'),
+  filters: jsonb('filters'), // Search criteria used for the export
+  recordCount: integer('record_count'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
 // Define relations
@@ -267,9 +404,10 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     fields: [users.managerId],
     references: [users.id],
   }),
-  subordinates: many(users),
+  subordinates: many(users, { relationName: 'manager_subordinates' }),
   expenseRequests: many(expenseRequests),
   notifications: many(notifications),
+  notificationSettings: many(notificationSettings),
 }));
 
 export const departmentsRelations = relations(departments, ({ one, many }) => ({
@@ -277,6 +415,7 @@ export const departmentsRelations = relations(departments, ({ one, many }) => ({
     fields: [departments.parentId],
     references: [departments.id],
   }),
+  children: many(departments, { relationName: 'parent_children' }),
   manager: one(users, {
     fields: [departments.managerId],
     references: [users.id],
@@ -290,7 +429,7 @@ export const expenseCategoriesRelations = relations(expenseCategories, ({ one, m
     fields: [expenseCategories.parentId],
     references: [expenseCategories.id],
   }),
-  children: many(expenseCategories),
+  children: many(expenseCategories, { relationName: 'parent_children' }),
   expenseRequests: many(expenseRequests),
   invoiceLineItems: many(invoiceLineItems),
 }));
@@ -309,9 +448,29 @@ export const expenseRequestsRelations = relations(expenseRequests, ({ one, many 
     references: [expenseCategories.id],
   }),
   attachments: many(expenseAttachments),
+  approvalInstances: many(approvalInstances, { relationName: 'expense_approvals' }),
 }));
 
-export const approvalWorkflowsRelations = relations(approvalWorkflows, ({ many }) => ({
+export const expenseAttachmentsRelations = relations(expenseAttachments, ({ one }) => ({
+  expense: one(expenseRequests, {
+    fields: [expenseAttachments.expenseId],
+    references: [expenseRequests.id],
+  }),
+  uploadedBy: one(users, {
+    fields: [expenseAttachments.uploadedById],
+    references: [users.id],
+  }),
+}));
+
+export const approvalWorkflowsRelations = relations(approvalWorkflows, ({ one, many }) => ({
+  department: one(departments, {
+    fields: [approvalWorkflows.departmentId],
+    references: [departments.id],
+  }),
+  category: one(expenseCategories, {
+    fields: [approvalWorkflows.categoryId],
+    references: [expenseCategories.id],
+  }),
   steps: many(approvalSteps),
   instances: many(approvalInstances),
 }));
@@ -364,7 +523,12 @@ export const invoicesRelations = relations(invoices, ({ one, many }) => ({
     fields: [invoices.paymentRequestId],
     references: [paymentRequests.id],
   }),
+  eInvoiceProvider: one(eInvoiceProviders, {
+    fields: [invoices.eInvoiceProviderId],
+    references: [eInvoiceProviders.id],
+  }),
   lineItems: many(invoiceLineItems),
+  approvalInstances: many(approvalInstances, { relationName: 'invoice_approvals' }),
 }));
 
 export const invoiceLineItemsRelations = relations(invoiceLineItems, ({ one }) => ({
@@ -378,6 +542,10 @@ export const invoiceLineItemsRelations = relations(invoiceLineItems, ({ one }) =
   }),
 }));
 
+export const eInvoiceProvidersRelations = relations(eInvoiceProviders, ({ many }) => ({
+  invoices: many(invoices),
+}));
+
 export const banksRelations = relations(banks, ({ many }) => ({
   companyAccounts: many(companyBankAccounts),
 }));
@@ -388,6 +556,7 @@ export const companyBankAccountsRelations = relations(companyBankAccounts, ({ on
     references: [banks.id],
   }),
   paymentRequests: many(paymentRequests),
+  bankTransactions: many(bankTransactions),
 }));
 
 export const paymentRequestsRelations = relations(paymentRequests, ({ one, many }) => ({
@@ -404,11 +573,38 @@ export const paymentRequestsRelations = relations(paymentRequests, ({ one, many 
     references: [companyBankAccounts.id],
   }),
   invoices: many(invoices),
+  bankTransactions: many(bankTransactions),
+  approvalInstances: many(approvalInstances, { relationName: 'payment_approvals' }),
+}));
+
+export const bankTransactionsRelations = relations(bankTransactions, ({ one }) => ({
+  bankAccount: one(companyBankAccounts, {
+    fields: [bankTransactions.bankAccountId],
+    references: [companyBankAccounts.id],
+  }),
+  paymentRequest: one(paymentRequests, {
+    fields: [bankTransactions.paymentRequestId],
+    references: [paymentRequests.id],
+  }),
 }));
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({
   user: one(users, {
     fields: [notifications.userId],
+    references: [users.id],
+  }),
+}));
+
+export const notificationSettingsRelations = relations(notificationSettings, ({ one }) => ({
+  user: one(users, {
+    fields: [notificationSettings.userId],
+    references: [users.id],
+  }),
+}));
+
+export const exportLogsRelations = relations(exportLogs, ({ one }) => ({
+  user: one(users, {
+    fields: [exportLogs.userId],
     references: [users.id],
   }),
 }));

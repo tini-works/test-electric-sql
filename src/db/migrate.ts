@@ -1,23 +1,20 @@
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { db, pool } from './index';
 
-// This script runs migrations on the database
+// Run migrations
 async function runMigrations() {
   console.log('Running migrations...');
   
   try {
-    // Run migrations
-    await migrate(db, { migrationsFolder: './migrations' });
+    await migrate(db, { migrationsFolder: './drizzle' });
     console.log('Migrations completed successfully');
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error('Error running migrations:', error);
     process.exit(1);
   } finally {
-    // Close the pool
     await pool.end();
   }
 }
 
-// Run the migration function
 runMigrations();
 

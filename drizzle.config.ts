@@ -2,10 +2,12 @@ import type { Config } from 'drizzle-kit';
 
 export default {
   schema: './src/db/schema/index.ts',
-  out: './migrations',
+  out: './drizzle',
   driver: 'pg',
   dbCredentials: {
     connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vietnam_finance',
   },
+  verbose: true,
+  strict: true,
 } satisfies Config;
 

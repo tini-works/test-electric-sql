@@ -1,97 +1,137 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 // Mock data for expenses
 const mockExpenses = [
   {
     id: '1',
     title: 'Office Supplies',
+    description: 'Purchased office supplies for the marketing department',
     amount: 2500000,
-    category: 'Office Expenses',
-    department: 'Administration',
+    currency: 'VND',
+    status: 'PENDING',
+    category: 'Office Supplies',
     requester: 'Nguyen Van A',
-    status: 'APPROVED',
-    date: '2024-05-25',
+    department: 'Marketing',
+    createdAt: '2024-05-25',
   },
   {
     id: '2',
-    title: 'Team Lunch',
-    amount: 1800000,
-    category: 'Meals & Entertainment',
-    department: 'Marketing',
+    title: 'Business Trip to Hanoi',
+    description: 'Flight tickets and accommodation for business trip',
+    amount: 5000000,
+    currency: 'VND',
+    status: 'APPROVED',
+    category: 'Travel',
     requester: 'Tran Thi B',
-    status: 'PENDING',
-    date: '2024-05-24',
+    department: 'Sales',
+    createdAt: '2024-05-24',
   },
   {
     id: '3',
-    title: 'Software Subscription',
-    amount: 5000000,
-    category: 'Software & IT',
-    department: 'IT',
+    title: 'Team Lunch',
+    description: 'Team lunch for the IT department',
+    amount: 1500000,
+    currency: 'VND',
+    status: 'REJECTED',
+    category: 'Meals',
     requester: 'Le Van C',
-    status: 'APPROVED',
-    date: '2024-05-22',
+    department: 'IT',
+    createdAt: '2024-05-23',
   },
   {
     id: '4',
-    title: 'Travel Expenses',
-    amount: 3200000,
-    category: 'Travel',
-    department: 'Sales',
+    title: 'Software Subscription',
+    description: 'Annual subscription for design software',
+    amount: 3000000,
+    currency: 'VND',
+    status: 'APPROVED',
+    category: 'Software',
     requester: 'Pham Thi D',
-    status: 'REJECTED',
-    date: '2024-05-20',
+    department: 'Design',
+    createdAt: '2024-05-22',
   },
   {
     id: '5',
-    title: 'Conference Registration',
+    title: 'Marketing Materials',
+    description: 'Printed brochures and flyers for marketing campaign',
     amount: 4500000,
-    category: 'Training & Development',
-    department: 'HR',
+    currency: 'VND',
+    status: 'PENDING',
+    category: 'Marketing',
     requester: 'Hoang Van E',
-    status: 'DRAFT',
-    date: '2024-05-18',
+    department: 'Marketing',
+    createdAt: '2024-05-21',
   },
   {
     id: '6',
-    title: 'Client Meeting',
-    amount: 1200000,
-    category: 'Meals & Entertainment',
-    department: 'Sales',
+    title: 'Office Furniture',
+    description: 'New chairs for the meeting room',
+    amount: 7500000,
+    currency: 'VND',
+    status: 'DRAFT',
+    category: 'Furniture',
     requester: 'Nguyen Thi F',
-    status: 'APPROVED',
-    date: '2024-05-15',
+    department: 'Administration',
+    createdAt: '2024-05-20',
   },
   {
     id: '7',
-    title: 'Office Furniture',
-    amount: 8500000,
-    category: 'Fixed Assets',
-    department: 'Administration',
+    title: 'Client Meeting',
+    description: 'Lunch with potential client',
+    amount: 1200000,
+    currency: 'VND',
+    status: 'APPROVED',
+    category: 'Meals',
     requester: 'Tran Van G',
-    status: 'PENDING',
-    date: '2024-05-12',
+    department: 'Sales',
+    createdAt: '2024-05-19',
   },
   {
     id: '8',
-    title: 'Marketing Campaign',
-    amount: 15000000,
-    category: 'Marketing',
-    department: 'Marketing',
+    title: 'Training Course',
+    description: 'Professional development course for finance team',
+    amount: 8000000,
+    currency: 'VND',
+    status: 'PENDING',
+    category: 'Training',
     requester: 'Le Thi H',
-    status: 'APPROVED',
-    date: '2024-05-10',
+    department: 'Finance',
+    createdAt: '2024-05-18',
   },
 ];
 
+// Mock data for categories
+const mockCategories = [
+  { id: '1', name: 'Office Supplies' },
+  { id: '2', name: 'Travel' },
+  { id: '3', name: 'Meals' },
+  { id: '4', name: 'Software' },
+  { id: '5', name: 'Marketing' },
+  { id: '6', name: 'Furniture' },
+  { id: '7', name: 'Training' },
+];
+
+// Mock data for departments
+const mockDepartments = [
+  { id: '1', name: 'Marketing' },
+  { id: '2', name: 'Sales' },
+  { id: '3', name: 'IT' },
+  { id: '4', name: 'Design' },
+  { id: '5', name: 'Administration' },
+  { id: '6', name: 'Finance' },
+];
+
 const ExpensesPage = () => {
+  const { currentUser } = useAuth();
   const [expenses, setExpenses] = useState(mockExpenses);
   const [filteredExpenses, setFilteredExpenses] = useState(mockExpenses);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
   // In a real application, you would fetch this data from your API
   useEffect(() => {
@@ -115,7 +155,7 @@ const ExpensesPage = () => {
       result = result.filter(
         (expense) =>
           expense.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          expense.requester.toLowerCase().includes(searchTerm.toLowerCase())
+          expense.description.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -131,8 +171,12 @@ const ExpensesPage = () => {
       result = result.filter((expense) => expense.department === departmentFilter);
     }
 
+    if (dateFilter) {
+      result = result.filter((expense) => expense.createdAt.includes(dateFilter));
+    }
+
     setFilteredExpenses(result);
-  }, [expenses, searchTerm, statusFilter, categoryFilter, departmentFilter]);
+  }, [expenses, searchTerm, statusFilter, categoryFilter, departmentFilter, dateFilter]);
 
   // Format currency
   const formatCurrency = (amount: number) => {
@@ -148,17 +192,10 @@ const ExpensesPage = () => {
         return 'badge-pending';
       case 'REJECTED':
         return 'badge-rejected';
-      case 'PAID':
-        return 'badge-approved';
       default:
         return 'badge-draft';
     }
   };
-
-  // Get unique values for filters
-  const statuses = [...new Set(expenses.map((expense) => expense.status))];
-  const categories = [...new Set(expenses.map((expense) => expense.category))];
-  const departments = [...new Set(expenses.map((expense) => expense.department))];
 
   return (
     <div className="container px-4 mx-auto">
@@ -189,7 +226,7 @@ const ExpensesPage = () => {
               id="search"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by title or requester"
+              placeholder="Search by title or description"
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
             />
           </div>
@@ -205,11 +242,11 @@ const ExpensesPage = () => {
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
             >
               <option value="">All Statuses</option>
-              {statuses.map((status) => (
-                <option key={status} value={status}>
-                  {status}
-                </option>
-              ))}
+              <option value="DRAFT">Draft</option>
+              <option value="PENDING">Pending</option>
+              <option value="APPROVED">Approved</option>
+              <option value="REJECTED">Rejected</option>
+              <option value="PAID">Paid</option>
             </select>
           </div>
 
@@ -224,9 +261,9 @@ const ExpensesPage = () => {
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
             >
               <option value="">All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
+              {mockCategories.map((category) => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
                 </option>
               ))}
             </select>
@@ -243,9 +280,9 @@ const ExpensesPage = () => {
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
             >
               <option value="">All Departments</option>
-              {departments.map((department) => (
-                <option key={department} value={department}>
-                  {department}
+              {mockDepartments.map((department) => (
+                <option key={department.id} value={department.name}>
+                  {department.name}
                 </option>
               ))}
             </select>
@@ -261,9 +298,9 @@ const ExpensesPage = () => {
               <th>Title</th>
               <th>Amount</th>
               <th>Category</th>
-              <th>Department</th>
-              <th>Requester</th>
               <th>Status</th>
+              <th>Requester</th>
+              <th>Department</th>
               <th>Date</th>
               <th>Actions</th>
             </tr>
@@ -275,14 +312,14 @@ const ExpensesPage = () => {
                   <td>{expense.title}</td>
                   <td>{formatCurrency(expense.amount)}</td>
                   <td>{expense.category}</td>
-                  <td>{expense.department}</td>
-                  <td>{expense.requester}</td>
                   <td>
                     <span className={`badge ${getStatusBadgeClass(expense.status)}`}>
                       {expense.status}
                     </span>
                   </td>
-                  <td>{expense.date}</td>
+                  <td>{expense.requester}</td>
+                  <td>{expense.department}</td>
+                  <td>{expense.createdAt}</td>
                   <td>
                     <Link to={`/expenses/${expense.id}`} className="text-primary hover:underline">
                       View
