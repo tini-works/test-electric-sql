@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 text-white bg-primary rounded-md hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-400 focus:ring-opacity-50;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50;
+  }
+  
+  .btn-success {
+    @apply px-4 py-2 text-white bg-success rounded-md hover:bg-success-600 focus:outline-none focus:ring-2 focus:ring-success-400 focus:ring-opacity-50;
+  }
+  
+  .btn-danger {
+    @apply px-4 py-2 text-white bg-danger rounded-md hover:bg-danger-600 focus:outline-none focus:ring-2 focus:ring-danger-400 focus:ring-opacity-50;
+  }
+  
+  .btn-warning {
+    @apply px-4 py-2 text-gray-900 bg-warning rounded-md hover:bg-warning-600 focus:outline-none focus:ring-2 focus:ring-warning-400 focus:ring-opacity-50;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .badge-approved {
+    @apply bg-success-100 text-success-800;
+  }
+  
+  .badge-pending {
+    @apply bg-warning-100 text-warning-800;
+  }
+  
+  .badge-rejected {
+    @apply bg-danger-100 text-danger-800;
+  }
+  
+  .badge-draft {
+    @apply bg-gray-100 text-gray-800;
+  }
+  
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary;
+  }
+  
+  .form-select {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary;
+  }
+  
+  .form-checkbox {
+    @apply w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary;
+  }
+  
+  .form-radio {
+    @apply w-4 h-4 text-primary border-gray-300 focus:ring-primary;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply p-6;
+  }
+  
+  .card-footer {
+    @apply px-6 py-4 border-t border-gray-200;
+  }
+  
+  .data-table {
+    @apply min-w-full divide-y divide-gray-200;
+  }
+  
+  .data-table th {
+    @apply px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50;
+  }
+  
+  .data-table td {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-gray-900;
+  }
+  
+  .data-table tr {
+    @apply hover:bg-gray-50;
+  }
+  
+  .data-table tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+}
+
