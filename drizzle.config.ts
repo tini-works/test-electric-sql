@@ -2,11 +2,12 @@ import type { Config } from 'drizzle-kit';
 
 export default {
   schema: './src/db/schema/index.ts',
-  out: './migrations',
-  dialect: 'postgresql',
+  out: './drizzle',
+  driver: 'pg',
   dbCredentials: {
-    // This is a placeholder since we're using PGlite
-    // The actual connection is handled in our code
-    connectionString: 'postgresql://user:password@localhost:5432/db',
+    connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/vietnam_finance',
   },
+  verbose: true,
+  strict: true,
 } satisfies Config;
+
